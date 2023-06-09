@@ -1,0 +1,103 @@
+#include <dht.h>
+
+dht DHT;
+
+#define DHT11_PIN 7
+
+int gas_sensor135 = A0; //Sensor pin 
+float m = -0.3376; //Slope 
+float b = 0.7165; //Y-Intercept 
+float R135 = 209.13; //Sensor Resistance in fresh air from previous code
+
+
+
+int gas_sensor7 = A1;
+float m1 = -0.6527; //Slope 
+float b1 = 1.30; //Y-Intercept 
+float R7 = 1.08; //Sensor Resistance in fresh air from previous code
+void setup(){
+  Serial.begin(9600);
+    pinMode(gas_sensor135, INPUT); //Set gas sensor as input 
+  pinMode(gas_sensor7, INPUT); //Set gas sensor as input 
+  pinMode(13, OUTPUT);
+  pinMode(12, OUTPUT);
+  pinMode(8, OUTPUT);
+}
+void loop(){
+  int chk = DHT.read11(DHT11_PIN);
+  Serial.print("Temperature = ");
+  Serial.println(DHT.temperature);
+  Serial.print("Humidity = ");
+  Serial.println(DHT.humidity);
+  delay(1000);
+float sensor_volt135; //Define variable for sensor voltage 
+  float RS_gas135; //Define variable for sensor resistance  
+  float ratio135; //Define variable for ratio
+  int sensorValue135 = analogRead(gas_sensor135); //Read analog values of sensor  
+  Serial.print("SENSOR RAW VALUE = ");
+  Serial.println(sensorValue135);
+  sensor_volt135 = sensorValue135*(5.0/1023.0); //Convert analog values to voltage 
+  Serial.print("Sensor value in volts = ");
+  Serial.println(sensor_volt135);
+  RS_gas135 = ((5.0*10.0)/sensor_volt135)-10.0; //Get value of RS in a gas
+  Serial.print("Rs value = ");
+  Serial.println(RS_gas135);
+  ratio135 = RS_gas135/R135;  // Get ratio RS_gas/RS_air
+  
+  Serial.print("Ratio = ");
+  Serial.println(ratio135);
+  float ppm_log135 = (log10(ratio135)-b)/m; //Get ppm value in linear scale according to the the ratio value  
+  float ppm135= pow(10, ppm_log135); //Convert ppm value to log scale 
+  Serial.print("Our desired PPM(135)Co2, alcohol = ");
+  Serial.println(ppm135);
+  double percentage135 = ppm135/10000; //Convert to percentage 
+  Serial.print("Value in Percentage = "); //Load screen buffer with percentage value
+  Serial.println(percentage135); 
+  delay(1000);
+
+if (ppm135 > 26 && ppm135<100)
+  {
+    digitalWrite(13, HIGH);
+  }
+  else
+    digitalWrite(13, LOW);
+ if (ppm135 > 100)
+ {
+    digitalWrite(8, HIGH);
+  }
+  else
+    digitalWrite(8, LOW);
+
+
+float sensor_volt; //Define variable for sensor voltage 
+  float RS_gas; //Define variable for sensor resistance  
+  float ratio; //Define variable for ratio
+  int sensorValue = analogRead(gas_sensor7); //Read analog values of sensor  
+
+  Serial.print("GAS SENSOR RAW VALUE = ");
+  Serial.println(sensorValue);
+  sensor_volt = sensorValue*(5.0/1023.0); //Convert analog values to voltage 
+  Serial.print("Sensor value in volts = ");
+  Serial.println(sensor_volt);
+  RS_gas = ((5.0*10.0)/sensor_volt)-10.0; //Get value of RS in a gas
+  Serial.print("Rs value = ");
+  Serial.println(RS_gas);
+  ratio = RS_gas/R7;  // Get ratio RS_gas/RS_air
+ Serial.print("Ratio = ");
+  Serial.println(ratio);
+  double ppm_log = (log10(ratio)-b1)/m1; //Get ppm value in linear scale according to the the ratio value  
+  double ppm = pow(10, ppm_log); //Convert ppm value to log scale 
+  Serial.print("Our desired PPM (CO)= ");
+  Serial.println(ppm);
+  double percentage = ppm/10000; //Convert to percentage 
+  Serial.print("Value in Percentage = "); //Load screen buffer with percentage value
+  Serial.println(percentage); 
+  delay(2000);
+if (ppm > 0.36)
+  {
+    digitalWrite(12, HIGH);
+  }
+  else
+    digitalWrite(12, LOW);
+  
+}
